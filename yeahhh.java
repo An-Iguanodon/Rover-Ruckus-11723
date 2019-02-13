@@ -221,24 +221,24 @@ public class yeahhh extends OpMode {
         if (gamepad1.left_bumper && gamepad1.right_bumper) {
             // Slow Mode halves the power to slow down the motors.
             // This is for lining up the robot for hanging in endgame.
-            LFMP = LFMP/4;
-            RFMP = RFMP/4;
-            LBMP = LBMP/4;
-            RBMP = RBMP/4;
+            LFMP = LFMP / 4;
+            RFMP = RFMP / 4;
+            LBMP = LBMP / 4;
+            RBMP = RBMP / 4;
 
         }
         if (gamepad2.left_stick_y != 0) {
             if (gamepad2.left_stick_y > 0) {
-                SlideRotLeftP = (gamepad2.left_stick_y/2);
-                SlideRotRightP = (gamepad2.left_stick_y/2);
+                SlideRotLeftP = (gamepad2.left_stick_y / 2);
+                SlideRotRightP = (gamepad2.left_stick_y / 2);
             }
             if (gamepad2.left_stick_y < 0) {
-                SlideRotLeftP = (gamepad2.left_stick_y/2);
-                SlideRotRightP = (gamepad2.left_stick_y/2);
+                SlideRotLeftP = (gamepad2.left_stick_y / 2);
+                SlideRotRightP = (gamepad2.left_stick_y / 2);
 
             }
         }
-        if (gamepad2.right_stick_y != 0){
+        if (gamepad2.right_stick_y != 0) {
             if (gamepad2.right_stick_y > 0) {
                 SlideLinP = gamepad2.right_stick_y;
             }
@@ -296,7 +296,7 @@ public class yeahhh extends OpMode {
 
         if (hang) {
             Lockservo.setPosition(1);
-            sleep(  3000);
+            sleep(3000);
             hang = false;
         }
 

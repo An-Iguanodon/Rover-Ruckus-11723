@@ -8,20 +8,42 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.teamcode.vision.MasterVision;
 import org.firstinspires.ftc.teamcode.vision.SampleRandomizedPositions;
 
+import static android.os.SystemClock.sleep;
+
 @Autonomous
 public class SimpleAutonomous extends OpMode {
 
+    HardwarePushbot robot = new HardwarePushbot();
+
+    static final double COUNTS_PER_MOTOR_REV = 1680;    // eg: TETRIX Motor Encoder
+    static final double DRIVE_GEAR_REDUCTION = 1.0;     // This is < 1.0 if geared UP
+    static final double WHEEL_DIAMETER_INCHES = 0.23622;     // For figuring circumference
+    static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
+            (WHEEL_DIAMETER_INCHES * 3.1415);
+
+    static final double INCREMENT = 0.1;
+    boolean rampUp = true;
+
     public ElapsedTime runtime = new ElapsedTime();
-    public DcMotor LFM = null;
-    public DcMotor RFM = null;
-    public DcMotor LBM = null;
-    public DcMotor RBM = null;
-    public DcMotor HM = null;
-    public DcMotor SlideRotLeft = null;
-    public DcMotor SlideRotRight = null;
-    public DcMotor SlideLin = null;
-    public Servo S1;
+    private DcMotor LFM = null;
+    private DcMotor RFM = null;
+    private DcMotor LBM = null;
+    private DcMotor RBM = null;
+    private DcMotor HM = null;
+    private DcMotor SlideRotLeft = null;
+    private DcMotor SlideRotRight = null;
+    private DcMotor SlideLin = null;
+    private Servo Lockservo = null;
     private int Gold = 0;
+    private double LFMP = 0;
+    private double RFMP = 0;
+    private double LBMP = 0;
+    private double RBMP = 0;
+    private double HMP = 0;
+    private double SlideRotLeftP = 0;
+    private double SlideRotRightP = 0;
+    private double SlideLinP = 0;
+    private double t = System.currentTimeMillis();
     MasterVision vision;
     SampleRandomizedPositions goldPosition;
 
@@ -37,7 +59,7 @@ public class SimpleAutonomous extends OpMode {
         SlideRotLeft = hardwareMap.get(DcMotor.class, "SlideRotLeft");
         SlideRotRight = hardwareMap.get(DcMotor.class, "SlideRotRight");
         SlideLin = hardwareMap.get(DcMotor.class, "SlideLin");
-        S1 = hardwareMap.servo.get("S1");
+        Lockservo = hardwareMap.get(Servo.class, "Lockservo");
 
         LFM.setDirection(DcMotor.Direction.REVERSE);
         LBM.setDirection(DcMotor.Direction.REVERSE);
@@ -49,7 +71,7 @@ public class SimpleAutonomous extends OpMode {
         parameters.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;// recommended camera direction
         parameters.vuforiaLicenseKey = "ASrkvw7/////AAABmdfG2uEBx0wAndbotgzIzzRcEHENua4tUnW97NIJE6pEM8HJf1L2Vl2/KxWo7nMQsaaBdEfwq+DCuAVfELk/b/13ybWq6zvUbNDl7g46hdIFGcW2iOds+kdOXmE7NaJCxJS4ytBYwEYX0F4U2VLScBzH0NnsCN+zHbZSg/IRYI2YifEZLYUiLWyZgVyKGkhrx12IjqMdp+t3YU2yXrpnZgsMg5VcZe57P3Vt7i4dhP4EfHvjadR2xfRGhUgXjkAyX3gHkqwcpIsrFDsZEKVuASvpfsjlHM3DA337WuvYP74Z97Rw66MZyz1Ocz02rjWSEllHuNVFGVURayBn8qrGYKR34e3Nw4xGRR9uu8hWCq9T";
 
-        vision = new MasterVision(parameters, hardwareMap, true, MasterVision.TFLiteAlgorithm.INFER_RIGHT);
+        vision = new MasterVision(parameters, hardwareMap, false, MasterVision.TFLiteAlgorithm.INFER_NONE);
         vision.init();// enables the camera overlay. this will take a couple of seconds
         vision.enable();// enables the tracking algorithms. this might also take a little time
 
@@ -64,14 +86,6 @@ public class SimpleAutonomous extends OpMode {
 
     @Override
     public void loop() {
-        double LFMP = 0;
-        double RFMP = 0;
-        double LBMP = 0;
-        double RBMP = 0;
-        double HMP = 0;
-        double SlideRotLeftP = 0;
-        double SlideRotRightP = 0;
-        double SlideLinP = 0;
 
         vision.disable();// disables tracking algorithms. this will free up your phone's processing power for other jobs.
 
@@ -100,50 +114,40 @@ public class SimpleAutonomous extends OpMode {
         telemetry.update();
 
         vision.shutdown();
-        // If we're still with the first 3 seconds after pressing start keep driving forward
-        if (System.currentTimeMillis() < start_time + 250) {
-            S1.setPosition(0);
-        }
-        if (System.currentTimeMillis() < start_time + 750) {
-            HMP = -0.5;
-        }
-        if (System.currentTimeMillis() < start_time + 2000) {
-            if (Gold == 0){
 
-            }else if (Gold == 1){
-                if (System.currentTimeMillis() < start_time + 2400 ) {
-                    LFMP = -1;
-                    RFMP = -1;
-                    LBMP = -1;
-                    RBMP = -1;
-                }
-                if (System.currentTimeMillis() < start_time + 2800) {
-                    LFMP = 0.98;
-                    RFMP = -0.98;
-                    LBMP = -0.98;
-                    RBMP = 0.98;
-                }
-            }else if (Gold == 2){
-                start_time = start_time + 400;
-                if (System.currentTimeMillis() < start_time + 2800) {
-                    LFMP = 0.98;
-                    RFMP = -0.98;
-                    LBMP = -0.98;
-                    RBMP = 0.98;
-                }
-            }else if (Gold == 3) {
-                if (System.currentTimeMillis() < start_time + 2400 ) {
-                    LFMP = 1;
-                    RFMP = 1;
-                    LBMP = 1;
-                    RBMP = 1;
-                }
-                if (System.currentTimeMillis() < start_time + 2800) {
-                    LFMP = 0.98;
-                    RFMP = -0.98;
-                    LBMP = -0.98;
-                    RBMP = 0.98;
-                }
+        // Lift rachet while moving hang motor
+        if (t < start_time + 1000) {
+            Lockservo.setPosition(0);
+        }
+        if (t < start_time + 1000) {
+            HMP = 1;
+        }
+        // Unhang and stop hang motor
+        else if (t < start_time + 4500) {
+            encoderHang(8.3);
+        }
+        // Back up off the lander
+        else if (t < start_time + 5000) {
+            LFMP = -0.3;
+            RFMP = -0.3;
+            LBMP = -0.3;
+            RBMP = -0.3;
+        }
+        // Sampling
+        else if (t < start_time + 5200) {
+            LFMP = 0.5;
+            RFMP = -0.5;
+            LBMP = 0.5;
+            RBMP = -0.5;
+        } else if (t < start_time + 21500) {
+            if (Gold == 0) {
+
+            } else if (Gold == 1) {
+                Left();
+            } else if (Gold == 2) {
+                Middle();
+            } else if (Gold == 3) {
+                Right();
             }
         }
         if (System.currentTimeMillis() < start_time + 250) {
@@ -168,6 +172,112 @@ public class SimpleAutonomous extends OpMode {
         SlideRotLeft.setPower(SlideRotLeftP);
         SlideRotRight.setPower(SlideRotRightP);
         SlideLin.setPower(SlideLinP);
+
+    }
+
+    private void Left() {
+        if (t < start_time + 5500) {
+            LFMP = 0.5;
+            RFMP = -0.5;
+            LBMP = -0.5;
+            RBMP = 0.5;
+        } else if (t < start_time + 6500) {
+            LFMP = 0.5;
+            RFMP = 0.5;
+            LBMP = 0.5;
+            RBMP = 0.5;
+        } else if (t < start_time + 11500) {
+            LFMP = 1;
+            RFMP = -1;
+            LBMP = -1;
+            RBMP = 1;
+        } else if (t < start_time + 21500) {
+            LFMP = 1;
+            RFMP = 1;
+            LBMP = 1;
+            RBMP = 1;
+        }
+    }
+
+    private void Middle() {
+        if (t < start_time + 5300) {
+            LFMP = 0.5;
+            RFMP = -0.5;
+            LBMP = -0.5;
+            RBMP = 0.5;
+        } else if (t < start_time + 10300) {
+            LFMP = 1;
+            RFMP = -1;
+            LBMP = -1;
+            RBMP = 1;
+        } else if (t < start_time + 10800) {
+            LFMP = -0.5;
+            RFMP = -0.5;
+            LBMP = -0.5;
+            RBMP = -0.5;
+        } else if (t < start_time + 20800) {
+            LFMP = 1;
+            RFMP = 1;
+            LBMP = 1;
+            RBMP = 1;
+        } else if (t < start_time + 21500) {
+            start_time += 700;
+        }
+    }
+
+    private void Right() {
+        if (t < start_time + 5300) {
+            LFMP = 0.5;
+            RFMP = -0.5;
+            LBMP = -0.5;
+            RBMP = 0.5;
+        } else if (t < start_time + 6300) {
+            LFMP = 0.5;
+            RFMP = 0.5;
+            LBMP = 0.5;
+            RBMP = 0.5;
+        } else if (t < start_time + 11300) {
+            LFMP = 1;
+            RFMP = -1;
+            LBMP = -1;
+            RBMP = 1;
+        } else if (t < start_time + 21300) {
+            LFMP = 1;
+            RFMP = 1;
+            LBMP = 1;
+            RBMP = 1;
+        } else if (t < start_time + 21500) {
+            start_time += 200;
+        }
+    }
+
+    private void encoderHang(double distance) {
+        int newHangTarget;
+        // Determine new target position, and pass to motor controller
+        newHangTarget = robot.HM.getCurrentPosition() + (int) (distance * COUNTS_PER_INCH);
+        robot.HM.setTargetPosition(newHangTarget);
+
+
+        // reset the timeout time and start motion.
+        runtime.reset();
+        robot.HM.setPower(Math.abs(0.01));
+
+        // keep looping until motor is at target position
+        while ((runtime.seconds() < start_time + 4500) && robot.HM.isBusy()) {
+            if (rampUp) {
+                // Keep stepping up until we hit the max value.
+                HMP += INCREMENT;
+                if (robot.HM.getCurrentPosition() >= newHangTarget) {
+
+                    rampUp = !rampUp;   // Switch ramp direction
+                }
+            }
+            HM.setPower(HMP);
+            sleep(50);
+        }
+
+        // Stop all motion;
+        robot.HM.setPower(0);
 
     }
 }
