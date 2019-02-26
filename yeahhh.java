@@ -1,31 +1,3 @@
-/* Copyright (c) 2017 FIRST. All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted (subject to the limitations in the disclaimer below) provided that
- * the following conditions are met:
- *
- * Redistributions of source code must retain the above copyright notice, this list
- * of conditions and the following disclaimer.
- *
- * Redistributions in binary form must reproduce the above copyright notice, this
- * list of conditions and the following disclaimer in the documentation and/or
- * other materials provided with the distribution.
- *
- * Neither the name of FIRST nor the names of its contributors may be used to endorse or
- * promote products derived from this software without specific prior written permission.
- *
- * NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY THIS
- * LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
- * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -36,27 +8,13 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import static android.os.SystemClock.sleep;
 
-/**
- * This file contains an example of an iterative (Non-Linear) "OpMode".
- * An OpMode is a 'program' that runs in either the autonomous or the teleop period of an FTC match.
- * The names of OpModes appear on the menu of the FTC Driver Station.
- * When an selection is made from the menu, the corresponding OpMode
- * class is instantiated on the Robot Controller and executed.
- * <p>
- * This particular OpMode just executes a basic Tank Drive Teleop for a two wheeled robot
- * It includes all the skeletal structure that all iterative OpModes contain.
- * <p>
- * Use Android Studios to Copy this Class, and Paste it into your team's code folder with a new name.
- * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
- */
-
 @TeleOp(name = "yeahhh", group = "yeahhh")
 public class yeahhh extends OpMode {
     HardwarePushbot robot = new HardwarePushbot();
 
-    static final double COUNTS_PER_MOTOR_REV = 1680;    // eg: TETRIX Motor Encoder
-    static final double DRIVE_GEAR_REDUCTION = 1.0;     // This is < 1.0 if geared UP
-    static final double WHEEL_DIAMETER_INCHES = 0.23622;     // For figuring circumference
+    static final double COUNTS_PER_MOTOR_REV = 1680;
+    static final double DRIVE_GEAR_REDUCTION = 1.0;
+    static final double WHEEL_DIAMETER_INCHES = 0.23622;
     static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
             (WHEEL_DIAMETER_INCHES * 3.1415);
 
@@ -71,7 +29,6 @@ public class yeahhh extends OpMode {
     private DcMotor SlideLin = null;
     private Servo Lockservo;
     private CRServo S1;
-    private boolean driver2 = false;
     private boolean hang = false;
 
     public void main(String[] args) {
@@ -136,10 +93,6 @@ public class yeahhh extends OpMode {
 
     @Override
     public void loop() {
-        double LFMP = 0;
-        double RFMP = 0;
-        double LBMP = 0;
-        double RBMP = 0;
         double HMP = 0;
         double SlideRotLeftP = 0;
         double SlideRotRightP = 0;
@@ -148,84 +101,23 @@ public class yeahhh extends OpMode {
         double LSposition;
 
         LSposition = Lockservo.getPosition();
-        if (LSposition != 0)
-
-        {
+        if (LSposition != 0) {
             Lockservo.setPosition(0);
         }
 
-        if (!driver2) {
-            // Tank Mode uses one stick to control each wheel.
-            // - This requires no math, but it is hard to drive forward slowly and keep straight.
-            LFMP = -gamepad1.left_stick_y;
-            RFMP = -gamepad1.right_stick_y;
-            LBMP = -gamepad1.left_stick_y;
-            RBMP = -gamepad1.right_stick_y;
+        ramp(-gamepad1.left_stick_y, -gamepad1.right_stick_y, -gamepad1.left_stick_y, -gamepad1.right_stick_y);
 
-        }
-        if (gamepad1.left_trigger > 0.5)
-
-        {
-            LFMP = -0.98;
-            RFMP = 0.98;
-            LBMP = 0.98;
-            RBMP = -0.98;
-        } else if (gamepad1.right_trigger > 0.5)
-
-        {
-            LFMP = 0.98;
-            RFMP = -0.98;
-            LBMP = -0.98;
-            RBMP = 0.98;
+        if (gamepad1.left_trigger > 0.5) {
+            ramp(-gamepad1.left_trigger, gamepad1.left_trigger, gamepad1.left_trigger, -gamepad1.left_trigger);
+        } else if (gamepad1.right_trigger > 0.5) {
+            ramp(-gamepad1.left_trigger, gamepad1.left_trigger, gamepad1.left_trigger, -gamepad1.left_trigger);
         }
 
-        if (gamepad2.dpad_up)
-
-        {
-            encoderHang(0.505, -8.3, 2);
+        if (gamepad2.dpad_up) {
+            encoderHang(1, -8.3, 2);
         }
-        if (gamepad2.dpad_down)
-
-        {
-            hang = true;
-            encoderHang(0.505, 8.3, 2);
-        }
-
-        if (gamepad2.left_trigger > 0.5 && gamepad2.right_trigger > 0.5 && gamepad2.x)
-
-        {
-            driver2 = true;
-        }
-        if (driver2)
-
-        {
-            // override
-            LFMP = -gamepad2.left_stick_y;
-            RFMP = -gamepad2.right_stick_y;
-            LBMP = -gamepad2.left_stick_y;
-            RBMP = -gamepad2.right_stick_y;
-
-            if (gamepad2.left_trigger > 0.5) {
-                LFMP = -0.98;
-                RFMP = 0.98;
-                LBMP = 0.98;
-                RBMP = -0.98;
-            }
-            if (gamepad2.right_trigger > 0.5) {
-                LFMP = 0.98;
-                RFMP = -0.98;
-                LBMP = -0.98;
-                RBMP = 0.98;
-            }
-        }
-        if (gamepad1.left_bumper && gamepad1.right_bumper) {
-            // Slow Mode halves the power to slow down the motors.
-            // This is for lining up the robot for hanging in endgame.
-            LFMP = LFMP / 4;
-            RFMP = RFMP / 4;
-            LBMP = LBMP / 4;
-            RBMP = RBMP / 4;
-
+        if (gamepad2.dpad_down) {
+            HMP = 1;
         }
         if (gamepad2.left_stick_y != 0) {
             if (gamepad2.left_stick_y > 0) {
@@ -252,31 +144,54 @@ public class yeahhh extends OpMode {
         if (gamepad2.b) {
             S1P = 1;
         }
-        // Send calculated power to wheels
-        LFM.setPower(LFMP);
-        RFM.setPower(RFMP);
-        LBM.setPower(LBMP);
-        RBM.setPower(RBMP);
+        // Send calculated power to motors
         HM.setPower(HMP);
         SlideRotLeft.setPower(SlideRotLeftP);
         SlideRotRight.setPower(SlideRotRightP);
         SlideLin.setPower(SlideLinP);
         S1.setPower(S1P);
 
-        // Show the elapsed game time and wheel power.
-        telemetry.addData("Status", "Run Time: " + runtime.toString());
-        telemetry.addData("Motors", "left-front (%.2f), right-front (%.2f), left-back (%.2f), right-back (%.2f)", LFMP, RFMP, LBMP, RBMP);
-        String drive_mode = "";
-        telemetry.addData("Driving mode", "" + drive_mode);
-        telemetry.addLine("Bins: 2");
-        telemetry.addData("Position", robot.HM.getCurrentPosition());
-        telemetry.addData("Target", robot.HM.getCurrentPosition() + (7 * COUNTS_PER_INCH));
     }
 
     /*
      * Code to run ONCE after the driver hits STOP
      */
 
+    private void ramp(double LFMT, double RFMT, double LBMT, double RBMT) {
+        double LFMP = LFM.getPower();
+        double RFMP = RFM.getPower();
+        double LBMP = LBM.getPower();
+        double RBMP = RBM.getPower();
+
+        if (gamepad1.left_bumper && gamepad1.right_bumper) {
+            // Slow Mode halves the power to slow down the motors.
+            // This is for lining up the robot for hanging in endgame.
+            LFMT /= 4;
+            RFMT /= 4;
+            LBMT /= 4;
+            RBMT /= 4;
+
+        }
+        if (LFMP != LFMT) {
+            LFMP += (LFMT - LFMP) / 4;
+        }
+        if (RFMP != RFMT) {
+            RFMP += (RFMT - RFMP) / 4;
+        }
+        if (RFMP != LBMT) {
+            LBMP += (LBMT - LBMP) / 4;
+        }
+        if (RFMP != RBMT) {
+            RBMP += (RBMT - RBMP) / 4;
+        }
+
+        LFM.setPower(LFMP);
+        RFM.setPower(RFMP);
+        LBM.setPower(LBMP);
+        RBM.setPower(RBMP);
+
+        composeTelemetryMotor(LFMP, RFMP, LBMP, RBMP);
+    }
 
     private void encoderHang(double hangSpeed, double distance, double timeout) {
         int newHangTarget;
@@ -303,6 +218,16 @@ public class yeahhh extends OpMode {
         // Stop all motion;
         robot.HM.setPower(0);
 
+    }
+
+    private void composeTelemetryMotor(double LFMP, double RFMP, double LBMP, double RBMP){
+        // Show the elapsed game time and wheel power.
+        telemetry.addData("Status", "Run Time: " + runtime.toString());
+        telemetry.addData("Left-Front: ", LFMP);
+        telemetry.addData("Right-Front: ", RFMP);
+        telemetry.addData("Left-Back: ", LBMP);
+        telemetry.addData("Right-Back: ", RBMP);
+        telemetry.addLine("Bins: 2");
     }
 
     @Override
