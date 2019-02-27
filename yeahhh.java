@@ -10,7 +10,7 @@ import static android.os.SystemClock.sleep;
 
 @TeleOp(name = "yeahhh", group = "yeahhh")
 public class yeahhh extends OpMode {
-    HardwarePushbot robot = new HardwarePushbot();
+    TeleOpEncode robot = new TeleOpEncode();
 
     static final double COUNTS_PER_MOTOR_REV = 1680;
     static final double DRIVE_GEAR_REDUCTION = 1.0;
@@ -55,8 +55,6 @@ public class yeahhh extends OpMode {
 
         robot.init(hardwareMap);
         robot.HM.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        robot.HM.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        robot.HM.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         telemetry.addData("Encoders Initialized:", "Starting at %7d", robot.HM.getCurrentPosition());
         telemetry.update();
 
@@ -64,8 +62,7 @@ public class yeahhh extends OpMode {
         // Set zero power behavior to resist motion instead of coast.
         // This allows for more precise stopping with any motors.
         robot.HM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        robot.SlideRotLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        robot.SlideRotRight.setZeroPowerBehavior((DcMotor.ZeroPowerBehavior.BRAKE));
+        robot.SlideLin.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
@@ -114,29 +111,34 @@ public class yeahhh extends OpMode {
         }
 
         if (gamepad2.dpad_up) {
+            robot.HM.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            robot.HM.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             encoderHang(1, -8.3, 2);
         }
         if (gamepad2.dpad_down) {
+            robot.HM.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             HMP = 1;
         }
-        if (gamepad2.left_stick_y != 0) {
             if (gamepad2.left_stick_y > 0) {
                 SlideRotLeftP = (gamepad2.left_stick_y / 2);
                 SlideRotRightP = (gamepad2.left_stick_y / 2);
             }
-            if (gamepad2.left_stick_y < 0) {
+            else if (gamepad2.left_stick_y < 0) {
                 SlideRotLeftP = (gamepad2.left_stick_y / 2);
                 SlideRotRightP = (gamepad2.left_stick_y / 2);
 
             }
+        if (gamepad2.right_stick_y > 0) {
+            SlideLinP = gamepad2.right_stick_y;
         }
-        if (gamepad2.right_stick_y != 0) {
-            if (gamepad2.right_stick_y > 0) {
-                SlideLinP = gamepad2.right_stick_y;
-            }
-            if (gamepad2.right_stick_y < 0) {
-                SlideLinP = gamepad2.right_stick_y;
-            }
+        else if (gamepad2.right_stick_y < 0) {
+            SlideLinP = gamepad2.right_stick_y;
+        }
+        else{
+
+        }
+        if(gamepad2.right_stick_button){
+
         }
         if (gamepad2.a) {
             S1P = -1;
@@ -190,6 +192,8 @@ public class yeahhh extends OpMode {
         LBM.setPower(LBMP);
         RBM.setPower(RBMP);
 
+        telemetry.addData("Status", "Run Time: " + runtime.toString());
+        telemetry.addLine("Bins: 2");
         composeTelemetryMotor(LFMP, RFMP, LBMP, RBMP);
     }
 
@@ -220,14 +224,11 @@ public class yeahhh extends OpMode {
 
     }
 
-    private void composeTelemetryMotor(double LFMP, double RFMP, double LBMP, double RBMP){
-        // Show the elapsed game time and wheel power.
-        telemetry.addData("Status", "Run Time: " + runtime.toString());
+    private void composeTelemetryMotor(double LFMP, double RFMP, double LBMP, double RBMP) {
         telemetry.addData("Left-Front: ", LFMP);
         telemetry.addData("Right-Front: ", RFMP);
         telemetry.addData("Left-Back: ", LBMP);
         telemetry.addData("Right-Back: ", RBMP);
-        telemetry.addLine("Bins: 2");
     }
 
     @Override
